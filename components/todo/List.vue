@@ -1,59 +1,64 @@
 <template>
-<div class="">
-<!--  <div class="card" >-->
-<!--&lt;!&ndash;    header &ndash;&gt;-->
-<!--    <div class="card-header d-flex justify-content-between">-->
-<!--      <span>Todo list</span>-->
-<!--&lt;!&ndash;      New Task modal button&ndash;&gt;-->
-<!--      <b-button v-b-modal.modal-1 >New Task</b-button>-->
-<!--    </div>-->
-<!--&lt;!&ndash;    End header&ndash;&gt;-->
-<!--&lt;!&ndash;    List items&ndash;&gt;-->
-<!--    <b-list-group v-if="todoList.length > 0" :class="todoList.length > 12 ? 'list-scroll' : ''">-->
-<!--      <template  v-for="todo in todoList" >-->
-<!--        <b-list-group-item  :key="todo.id">-->
-<!--          <b-form-checkbox v-model="todo.status"-->
-<!--                           unchecked-value="0"-->
-<!--                           v-on:change.native="todoStatusChange(todo)"-->
-<!--          >-->
-<!--                              {{todo.title}}-->
-<!--          </b-form-checkbox>-->
-<!--        </b-list-group-item>-->
-<!--      </template>-->
-<!--    </b-list-group>-->
-<!--&lt;!&ndash;    End List items&ndash;&gt;-->
-<!--  </div>-->
-<!--&lt;!&ndash;  Adding modal &ndash;&gt;-->
-<!--  <b-modal id="modal-1" @ok="addTodo()" title="Enter task">-->
-<!--    <input type="text" v-model="tmpTitle" class="form-control" id="title">-->
-<!--  </b-modal>-->
-<!--&lt;!&ndash;  End Adding modal&ndash;&gt;-->
-  <List :tasks="tasks"></List>
-</div>
+
+  <section class="tasks">
+    <div class="list-header" >
+      <h1>
+        Todo List
+        <transition name="fade">
+          <small v-if="incomplete">({{ incomplete }})</small>
+        </transition>
+      </h1>
+      <div class="tasks__clear button-group pull-right">
+        <button class="button-style clear-completed-color"
+                @click="clearCompleted"
+        >
+          <i class="fa fa-check"></i> Clear Completed
+        </button>
+        <button class="button-style clear-all-color"
+                @click="clearAll"
+        >
+          <i class="fa fa-trash"></i> Clear All
+        </button>
+      </div>
+    </div>
+
+
+    <div class="form-group" style="margin-bottom: 30px">
+      <input class="form-field" @keyup.enter="addTask" v-model="newTask"  placeholder="Email">
+      <span @click="addTask"><i class="fa fa-plus"></i><b>NEW</b></span>
+    </div>
+
+
+
+    <transition-group name="fade" tag="ul" style="padding: 0">
+      <template v-for="(task, index) in tasks">
+        <ListItem
+          @remove="removeTask(index)"
+          @complete="completeTask(task)"
+          :task="task"
+          :key="'itme' + index"
+        ></ListItem>
+      </template>
+
+    </transition-group>
+  </section>
 </template>
 
 <script>
-import List from "./List";
+import ListItem from "./ListItem";
 export default {
-  name: "TodoList",
-  components: {
-    List
+  name: "List",
+  components : {
+    ListItem
+  },
+  props: {
+    tasks: {default: []}
   },
   data() {
     return {
       todoList : [],
       tmpTitle : '',
       newTask: '',
-      tasks: [
-        {
-          title: 'Make todo list',
-          completed: true
-        },
-        {
-          title: 'Go skydiving',
-          completed: false
-        }
-      ]
     }
   },
   computed: {
@@ -133,15 +138,6 @@ export default {
       })
     },
   },
-  watch : {
-    // Watching to Todo list store
-    '$store.state.todos.list' : {
-      handler () {
-        this.todoList = JSON.parse(JSON.stringify(this.$store.state.todos.list))
-      },
-      deep : true
-    }
-  }
 }
 </script>
 
