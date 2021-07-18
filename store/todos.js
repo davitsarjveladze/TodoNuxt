@@ -8,17 +8,7 @@ export const actions = {
     let list = []
     this.$axios.$get('/todos/getall').then((result) => {
       if (result.status === 1) {
-        const Data = JSON.parse(result.data)
-          // preparing data
-        for (let i in Data) {
-          list.push({
-            id : Data[i]['pk'],
-            title : Data[i]['fields']['title'],
-            status : Data[i]['fields']['status']
-          })
-        }
-
-        commit('setList',list)
+        commit('setList',result.data)
       }
     })
   }
@@ -34,11 +24,10 @@ export const mutations = {
   setList(state,list) {
     state.list = list
   },
+
   // updating current list item by id
   update(state, item) {
     let objIndex = state.list.findIndex((obj => obj.id === item.id));
     state.list[objIndex] = item;
-    console.log(item)
-    console.log(state.list)
-  }
+  },
 }

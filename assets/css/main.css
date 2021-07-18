@@ -95,6 +95,7 @@ h1 {
 @media (min-width: 760px) {
   .tasks {
     width: 100%;
+    min-width: 500px;
     max-width: 45rem;
     padding: 1em;
     margin: 1em auto;
@@ -149,16 +150,10 @@ h1 {
   padding: 8px 12px;
   font-size: 14px;
   line-height: 25px;
-  color: var(--group-color);
-  background: #e77676;
-  border: 1px solid #e77676;
   transition: background 0.3s ease, border 0.3s ease, color 0.3s ease;
-  border-radius: 0 0 6px 0;
   margin-bottom: 4px;
 }
-.list-group > span:hover {
-  background-color: #bb5c5c;
-}
+
 .list-item {
   display: block;
   width: 100%;
@@ -172,11 +167,31 @@ h1 {
   border: 1px solid var(--input-border);
   background: var(--input-background);
   transition: border 0.3s ease;
-  border-radius: 6px 0 0 0;
   margin-bottom: 4px;
+  margin-left: -2px;
+  margin-right: -2px;
+  cursor: pointer;
+
 }
 .completed {
   background: #5ddb5d;
+}
+
+.remove-button {
+  color: var(--input-color);
+  background: #e77676;
+  border: 1px solid #e77676;
+  border-radius: 0 0 6px 0;
+  cursor: pointer;
+}
+.list-group > .remove-button:hover {
+  background-color: #bb5c5c;
+}
+.drag-button {
+  color: white;
+  background: grey;
+  border-radius: 6px 0 0 0;
+  cursor: move;
 }
 
 

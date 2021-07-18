@@ -1,34 +1,6 @@
 <template>
 <div class="">
-<!--  <div class="card" >-->
-<!--&lt;!&ndash;    header &ndash;&gt;-->
-<!--    <div class="card-header d-flex justify-content-between">-->
-<!--      <span>Todo list</span>-->
-<!--&lt;!&ndash;      New Task modal button&ndash;&gt;-->
-<!--      <b-button v-b-modal.modal-1 >New Task</b-button>-->
-<!--    </div>-->
-<!--&lt;!&ndash;    End header&ndash;&gt;-->
-<!--&lt;!&ndash;    List items&ndash;&gt;-->
-<!--    <b-list-group v-if="todoList.length > 0" :class="todoList.length > 12 ? 'list-scroll' : ''">-->
-<!--      <template  v-for="todo in todoList" >-->
-<!--        <b-list-group-item  :key="todo.id">-->
-<!--          <b-form-checkbox v-model="todo.status"-->
-<!--                           unchecked-value="0"-->
-<!--                           v-on:change.native="todoStatusChange(todo)"-->
-<!--          >-->
-<!--                              {{todo.title}}-->
-<!--          </b-form-checkbox>-->
-<!--        </b-list-group-item>-->
-<!--      </template>-->
-<!--    </b-list-group>-->
-<!--&lt;!&ndash;    End List items&ndash;&gt;-->
-<!--  </div>-->
-<!--&lt;!&ndash;  Adding modal &ndash;&gt;-->
-<!--  <b-modal id="modal-1" @ok="addTodo()" title="Enter task">-->
-<!--    <input type="text" v-model="tmpTitle" class="form-control" id="title">-->
-<!--  </b-modal>-->
-<!--&lt;!&ndash;  End Adding modal&ndash;&gt;-->
-  <List :tasks="tasks"></List>
+  <List :tasks="todoList"></List>
 </div>
 </template>
 
@@ -42,99 +14,14 @@ export default {
   data() {
     return {
       todoList : [],
-      tmpTitle : '',
-      newTask: '',
-      tasks: [
-        {
-          title: 'Make todo list',
-          completed: true
-        },
-        {
-          title: 'Go skydiving',
-          completed: false
-        }
-      ]
-    }
-  },
-  computed: {
-    incomplete() {
-      return this.tasks.filter(this.inProgress).length;
     }
   },
   mounted() {
     // Taking Full list from Api
     this.$store.dispatch('todos/getList');
   },
-  methods : {
-    addTask() {
-      if (this.newTask) {
-        this.tasks.push({
-          title: this.newTask,
-          completed: false
-        });
-        this.newTask = '';
-      }
-    },
-    completeTask(task) {
-      task.completed = ! task.completed;
-    },
-    removeTask(index) {
-      this.tasks.splice(index, 1);
-    },
-    clearCompleted() {
-      this.tasks = this.tasks.filter(this.inProgress);
-    },
-    clearAll() {
-      this.tasks = [];
-    },
-
-    inProgress(task) {
-      return ! this.isCompleted(task);
-    },
-    isCompleted(task) {
-      return task.completed;
-    },
-    // Change list Item on server and client sides
-    todoStatusChange(item) {
-      // Request to server for Changing Status
-      this.$store.$axios.get('todos/update',{
-        params: {
-          id : item.id,
-          status :item.status === '0' ? 0 : 1,
-          title : item.title
-        }
-      }).then((data) => {
-        // Changing in Store if Everything is OK on server
-        if (data.data.status === 1) {
-          this.$store.commit('todos/update', {
-            item
-          })
-        }
-        // Set Default value for New task title
-        this.tmpTitle = '';
-      })
-    },
-    // Adding new task in todolist
-    addTodo () {
-      this.$store.$axios.get('todos/insert',{
-        params: {
-          title: this.tmpTitle,
-        }
-      }).then((data) => {
-        // adding on Store if everything is okay
-        if (data.data.status === 1) {
-          this.$store.commit('todos/add', {
-            title: this.tmpTitle,
-            status : false,
-            id : data.data.id,
-          })
-        }
-        this.tmpTitle = '';
-      })
-    },
-  },
   watch : {
-    // Watching to Todo list store
+    // Watching to Todolist store
     '$store.state.todos.list' : {
       handler () {
         this.todoList = JSON.parse(JSON.stringify(this.$store.state.todos.list))
