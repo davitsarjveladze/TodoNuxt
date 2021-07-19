@@ -32,12 +32,10 @@
       <transition-group name="fade" tag="ul" style="padding: 0">
         <template v-for="(task, index) in tasks">
           <ListItem
-            @dragenter="dragEnter(index,task.id)"
-            @dragstart="dragStart(index)"
-            @dragover="dragOver($event)"
+            @dragenter="dragEnter(index)"
             @dragend="dragEnd(index)"
             @remove="removeTask(index)"
-            @complete="completeTask(task)"
+            @complete="completeTask(task,index)"
             :task="task"
             :key="'item' + index"
           ></ListItem>
@@ -61,15 +59,12 @@ export default {
     return {
       newTask: '',
       draggableList : '',
-      check : '',
-      dragStartIndex : 0,
       lastDragEnterIndex : 0,
-      lastDragEnterId : 0,
     }
   },
   computed: {
     incomplete() {
-      return this.tasks.filter(this.inProgress).length;
+      return this.tasks.filter(x => !x.status).length;
     }
   },
   mounted() {
@@ -82,7 +77,7 @@ export default {
       // check if have item
       if (this.newTask) {
         // define order number to new item
-        let order = this.tasks.length ? this.tasks[this.tasks.length - 1]['order'] + 1 : 1
+        let order = this.tasks.length ? Math.ceil(this.tasks[this.tasks.length - 1]['order']) + 1 : 1
         // send request to insert
         this.$store.$axios.get('todos/insert',{
           params: {
@@ -98,13 +93,6 @@ export default {
               order : order,
               id : data.data.id,
             })
-            // add in current local array
-            this.tasks.push({
-              id : data.data.id,
-              title  : this.newTask,
-              order : order,
-              status : false
-            });
             this.newTask = '';
           }
         })
@@ -112,7 +100,7 @@ export default {
       }
     },
     // changing task status
-    completeTask(task) {
+    completeTask(task,index) {
       // send request to update status
       this.$store.$axios.get('todos/update',{
         params: {
@@ -126,9 +114,7 @@ export default {
         if (data.data.status === 1) {
           task.status = ! task.status;
           //updating store
-          this.$store.commit('todos/update', {
-            task
-          })
+          this.$store.commit('todos/update', {item : task, index : index})
         }
       })
     },
@@ -141,10 +127,8 @@ export default {
         }
       }).then((data) => {
         if (data.data.status) {
-          // remove item for local tasks
-          this.tasks.splice(index, 1);
           // set in store new list
-          this.$store.commit('todos/setList', this.tasks)
+          this.$store.commit('todos/sliceByIndex', index)
         }
       })
     },
@@ -164,10 +148,8 @@ export default {
           }
         }).then((data) => {
           if (data.data.status) {
-            // clearing tasks from local tasks
-            this.tasks = this.tasks.filter(this.inProgress);
             // set list in store
-            this.$store.commit('todos/setList', this.tasks)
+            this.$store.commit('todos/clearCompleted')
           }
         })
       }
@@ -186,40 +168,24 @@ export default {
           }
         }).then((data) => {
           if (data.data.status) {
-            this.tasks = [];
-            this.$store.commit('todos/setList', this.tasks)
+            this.$store.commit('todos/clearAll')
           }
         })
       }
-    },
-    // check if task in progress {'status' : false}
-    inProgress(task) {
-      return !this.isCompleted(task);
-    },
-    // check if task in completed {'status' : true}
-    isCompleted(task) {
-      return task.status;
-    },
-    // define drag index
-    dragStart(index) {
-      this.dragStartIndex =  index
     },
     // define index of last contacted item when dragging
     dragEnter(index) {
       this.lastDragEnterIndex = index
     },
-    dragOver(e) {
-      e.preventDefault(); // dragDrop is not executed otherwise
-    },
 
-    dragEnd(item) {
+    dragEnd(index) {
       if(typeof this.lastDragEnterIndex === 'number') {
         // define default order
         let currentOrder = this.tasks[this.lastDragEnterIndex]['order'] + 1
         // define last contacted item oder
         let prevItemOrder = this.tasks[this.lastDragEnterIndex]['order']
         // check if our item was upper of last contacted item
-        if (this.lastDragEnterIndex > item) {
+        if (this.lastDragEnterIndex > index) {
           // check if we have item after them
           if (this.tasks[this.lastDragEnterIndex + 1]) {
             // define average order number
@@ -227,7 +193,7 @@ export default {
           }
         }
         // check if our item was under of last contacted item
-        if (this.lastDragEnterIndex < item){
+        if (this.lastDragEnterIndex < index){
           // check if last contacted item is not firs item
           if (this.lastDragEnterIndex !== 0) {
             // define average order number
@@ -241,23 +207,22 @@ export default {
         // send request to update
         this.$store.$axios.get('todos/update',{
           params: {
-            id: this.tasks[item]['id'],
-            title: this.tasks[item]['title'],
-            status: this.tasks[item]['status'],
+            id: this.tasks[index]['id'],
+            title: this.tasks[index]['title'],
+            status: this.tasks[index]['status'],
             order: currentOrder
           }
         }).then((data) => {
           // adding on Store if everything is okay
           if (data.data.status) {
             // updating local data
-            this.tasks[item]['order'] = currentOrder
-            this.tasks.sort((a,b) => (a.order > b.order) ? 1 : ((b.order > a.order) ? -1 : 0))
-            this.$store.commit('todos/setList', this.tasks)
+            this.$store.commit('todos/updateOrder', {index : index ,currentOrder : currentOrder})
             this.lastDragEnterIndex = null
           }
         })
       }
     },
+
   },
 }
 </script>
